@@ -1,0 +1,54 @@
+version: "3"
+
+services:
+  # Redis
+  redis:
+    image: redis:2.8.19
+    hostname: redis
+    ports:
+      - "6380:6379"
+
+  # RabbitMQ
+  rabbit:
+    hostname: rabbit
+    image: rabbitmq:3.6.0
+    environment:
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=mypass
+    ports:
+      - "5673:5672"  # We forward this port because it's useful for debugging
+      - "15673:15672"  # Here, we can access RabbitMQ management plugin
+
+  # Celery
+  worker1:
+    build:
+      context: ..
+      dockerfile: docker/runner/Dockerfile
+    command: celery -A celery_app worker -l debug -n worker@%h
+    volumes:
+      - ./celery_app:/app
+    depends_on:
+      - rabbit
+
+  # Celery
+  worker2:
+    build:
+      context: ..
+      dockerfile: docker/runner/Dockerfile
+    command: celery -A celery_app worker -l debug -n worker@%h
+    volumes:
+    - ./celery_app:/app
+    depends_on:
+    - rabbit
+
+# Runner
+  runner:
+    build:
+      context: ..
+      dockerfile: docker/runner/Dockerfile
+    command: python run_tasks.py
+    volumes:
+      - ./celery_app:/app
+    depends_on:
+      - rabbit
+      - redis

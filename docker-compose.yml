@@ -22,9 +22,9 @@ services:
   # Celery
   worker1:
     build:
-      context: ..
+      context: .
       dockerfile: docker/runner/Dockerfile
-    command: celery -A celery_app worker -l debug -n worker@%h
+    command: celery -A celery_app worker -l debug -n worker@%h -Q q1
     volumes:
       - ./celery_app:/app
     depends_on:
@@ -33,9 +33,9 @@ services:
   # Celery
   worker2:
     build:
-      context: ..
+      context: .
       dockerfile: docker/runner/Dockerfile
-    command: celery -A celery_app worker -l debug -n worker@%h
+    command: celery -A celery_app worker -l debug -n worker@%h -Q q2
     volumes:
     - ./celery_app:/app
     depends_on:
@@ -44,7 +44,7 @@ services:
 # Runner
   runner:
     build:
-      context: ..
+      context: .
       dockerfile: docker/runner/Dockerfile
     command: python run_tasks.py
     volumes:
